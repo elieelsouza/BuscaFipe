@@ -1,10 +1,11 @@
 package com.parallelum.fipe.BuscaFipe.principal;
 
+import com.parallelum.fipe.BuscaFipe.model.DadosModelos;
 import com.parallelum.fipe.BuscaFipe.model.DadosVeiculo;
-import com.parallelum.fipe.BuscaFipe.model.Veiculo;
 import com.parallelum.fipe.BuscaFipe.service.ConsumoAPI;
 import com.parallelum.fipe.BuscaFipe.service.ConverteDados;
 
+import java.util.Comparator;
 import java.util.Scanner;
 
 public class Principal {
@@ -18,16 +19,44 @@ public class Principal {
         System.out.println("+++++++++++++++++++++++++++++++");
         System.out.println("++++BUSCADOR DE PRECOS FIPE++++");
         System.out.println("+++++++++++++++++++++++++++++++");
-        System.out.println("Informe o tipo de veiculo (Carro | Moto | Caminhao): ");
-        var tpVeiculo = ENTRADA.nextLine();
-        var urlVeiculo = URL_BASE + "/" + tpVeiculo.toLowerCase().replaceAll(" ", "+") + "/marcas";
-        var json = CONSUMO_API.obterDados(urlVeiculo);
-        DadosVeiculo veiculo = CONVERSOR.obterDados(json, DadosVeiculo.class);
-        System.out.println(veiculo.toString());
+        System.out.println("Informe o tipo de veiculo (Carros | Motos | Caminhoes): ");
+        var entrada = ENTRADA.nextLine();
+        var endereco = urlVeciulo(entrada);
+        String json = CONSUMO_API.obterDados(endereco);
+        var marcas = CONVERSOR.obterDadosList(json, DadosVeiculo.class, false);
+
+        marcas.stream()
+                .sorted(Comparator.comparingInt(DadosVeiculo::codigo))
+                .forEach(System.out::println);
+
+        System.out.println("Informe o codigo da marca desejada:");
+        var marca = ENTRADA.nextLine();
+        var endMarca = endereco + String.format("/%s/modelos", marca);
+        var jsonMarca = CONSUMO_API.obterDados(endMarca);
+        System.out.println(jsonMarca);
+
+        DadosModelos modelos = CONVERSOR.obterDados(jsonMarca, DadosModelos.class);
+        modelos.modelos().stream()
+                .sorted(Comparator.comparingInt(DadosVeiculo::codigo))
+                .forEach(System.out::println);
+
+
+
+
 
 
 
     }
 
-
+    private String urlVeciulo(String entrada) {
+        String url = " ";
+        if (entrada.toLowerCase().contains("carr")){
+            url = URL_BASE + "/carros/marcas";
+        } else if (entrada.toLowerCase().contains("mot")){
+            url = URL_BASE + "/motos/marcas";
+        } else {
+            url = URL_BASE + "/caminhoes/marcas";
+        }
+        return url;
+    }
 }
