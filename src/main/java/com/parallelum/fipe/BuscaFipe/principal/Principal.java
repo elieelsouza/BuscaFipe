@@ -6,6 +6,7 @@ import com.parallelum.fipe.BuscaFipe.model.DadosVeiculo;
 import com.parallelum.fipe.BuscaFipe.service.ConsumoAPI;
 import com.parallelum.fipe.BuscaFipe.service.ConverteDados;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -46,10 +47,17 @@ public class Principal {
         List<DadosVeiculo> veiculos = modelos.modelos().stream()
                         .collect(Collectors.toList());
 
-        System.out.println("Informe o codigo de um carro para consultar: ");
+        System.out.println("Informe o trecho do nome do veiculo para consulta: ");
         var trechoVeiculo = scanner.nextLine();
 
-        endereco = endereco + String.format("/%s/anos", trechoVeiculo);
+        veiculos.stream()
+                .filter(e ->  e.nome().toLowerCase().contains(trechoVeiculo.toLowerCase()))
+                .forEach(System.out::println);
+
+        System.out.println("Informe o codigo de um carro para consultar: ");
+        var cdCarro = scanner.nextLine();
+
+        endereco = endereco + String.format("/%s/anos", cdCarro);
         var jsonDesCompletaVeiculo = consumoAPI.obterDados(endereco);
         var modelosAnosPorCarro = conversor.obterDadosList(jsonDesCompletaVeiculo, DadosVeiculo.class, false);
 
