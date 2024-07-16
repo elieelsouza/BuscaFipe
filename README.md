@@ -15,3 +15,9 @@ O objetivo deste projeto foi trazer as informacoes FIPE de todos os anos do mode
 #### Para mais informacoes sobre a API:
 O consumo da API foi orientado pela documentação: https://deividfortuna.github.io/fipe/
 
+
+## Tecnologias
+- Java 17
+- Spring Boot 3.3.1
+- Jackson Lib
+- Maven
