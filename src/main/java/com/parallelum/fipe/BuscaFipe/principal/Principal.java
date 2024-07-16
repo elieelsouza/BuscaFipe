@@ -1,18 +1,22 @@
 package com.parallelum.fipe.BuscaFipe.principal;
 
+import com.parallelum.fipe.BuscaFipe.model.DadosCompletos;
 import com.parallelum.fipe.BuscaFipe.model.DadosModelos;
 import com.parallelum.fipe.BuscaFipe.model.DadosVeiculo;
 import com.parallelum.fipe.BuscaFipe.service.ConsumoAPI;
 import com.parallelum.fipe.BuscaFipe.service.ConverteDados;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Principal {
-    private static final Scanner ENTRADA = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(System.in);
     private static final String URL_BASE = "https://parallelum.com.br/fipe/api/v1";
-    private static final ConsumoAPI CONSUMO_API =  new ConsumoAPI();
-    private static final ConverteDados CONVERSOR =  new ConverteDados();
+    private static final ConsumoAPI consumoAPI =  new ConsumoAPI();
+    private static final ConverteDados conversor =  new ConverteDados();
 
 
     public void exibeMenu(){
@@ -20,32 +24,42 @@ public class Principal {
         System.out.println("++++BUSCADOR DE PRECOS FIPE++++");
         System.out.println("+++++++++++++++++++++++++++++++");
         System.out.println("Informe o tipo de veiculo (Carros | Motos | Caminhoes): ");
-        var entrada = ENTRADA.nextLine();
+        var entrada = Principal.scanner.nextLine();
         var endereco = urlVeciulo(entrada);
-        String json = CONSUMO_API.obterDados(endereco);
-        var marcas = CONVERSOR.obterDadosList(json, DadosVeiculo.class, false);
+        String json = consumoAPI.obterDados(endereco);
+        var marcas = conversor.obterDadosList(json, DadosVeiculo.class, false);
 
         marcas.stream()
-                .sorted(Comparator.comparingInt(DadosVeiculo::codigo))
+                .sorted(Comparator.comparing(DadosVeiculo::codigo))
                 .forEach(System.out::println);
 
         System.out.println("Informe o codigo da marca desejada:");
-        var marca = ENTRADA.nextLine();
-        var endMarca = endereco + String.format("/%s/modelos", marca);
-        var jsonMarca = CONSUMO_API.obterDados(endMarca);
-        System.out.println(jsonMarca);
+        var marca = Principal.scanner.nextLine();
+        endereco = endereco + String.format("/%s/modelos", marca);
+        var jsonMarca = consumoAPI.obterDados(endereco);
 
-        DadosModelos modelos = CONVERSOR.obterDados(jsonMarca, DadosModelos.class);
+        DadosModelos modelos = conversor.obterDados(jsonMarca, DadosModelos.class);
         modelos.modelos().stream()
-                .sorted(Comparator.comparingInt(DadosVeiculo::codigo))
+                .sorted(Comparator.comparing(DadosVeiculo::codigo))
                 .forEach(System.out::println);
 
+        List<DadosVeiculo> veiculos = modelos.modelos().stream()
+                        .collect(Collectors.toList());
 
+        System.out.println("Informe o codigo de um carro para consultar: ");
+        var trechoVeiculo = scanner.nextLine();
 
+        endereco = endereco + String.format("/%s/anos", trechoVeiculo);
+        var jsonDesCompletaVeiculo = consumoAPI.obterDados(endereco);
+        var modelosAnosPorCarro = conversor.obterDadosList(jsonDesCompletaVeiculo, DadosVeiculo.class, false);
 
-
-
-
+        List<DadosCompletos> modeloPorAno = new ArrayList<>();
+        for (DadosVeiculo dados: modelosAnosPorCarro){
+            var dadoConsulta = consumoAPI.obterDados(endereco + "/" + dados.codigo());
+            modeloPorAno.add(conversor.obterDados(dadoConsulta, DadosCompletos.class));
+        }
+        System.out.println("Todos os veiculos filtrados com avaliacoes por ano:");
+        modeloPorAno.forEach(System.out::println);
     }
 
     private String urlVeciulo(String entrada) {

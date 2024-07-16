@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record DadosVeiculo(Integer codigo, String nome) {
+public record DadosVeiculo(String codigo, String nome) {
 
     @Override
     public String toString(){
