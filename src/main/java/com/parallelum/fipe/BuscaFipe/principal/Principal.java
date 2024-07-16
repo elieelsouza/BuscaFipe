@@ -1,12 +1,11 @@
 package com.parallelum.fipe.BuscaFipe.principal;
 
-import com.parallelum.fipe.BuscaFipe.model.DadosCompletos;
-import com.parallelum.fipe.BuscaFipe.model.DadosModelos;
-import com.parallelum.fipe.BuscaFipe.model.DadosVeiculo;
+import com.parallelum.fipe.BuscaFipe.model.Veiculo;
+import com.parallelum.fipe.BuscaFipe.model.Modelos;
+import com.parallelum.fipe.BuscaFipe.model.Dados;
 import com.parallelum.fipe.BuscaFipe.service.ConsumoAPI;
 import com.parallelum.fipe.BuscaFipe.service.ConverteDados;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,46 +27,46 @@ public class Principal {
         var entrada = Principal.scanner.nextLine();
         var endereco = urlVeciulo(entrada);
         String json = consumoAPI.obterDados(endereco);
-        var marcas = conversor.obterDadosList(json, DadosVeiculo.class, false);
+        var marcas = conversor.obterDadosList(json, Dados.class);
 
         marcas.stream()
-                .sorted(Comparator.comparing(DadosVeiculo::codigo))
+                .sorted(Comparator.comparing(Dados::codigo))
                 .forEach(System.out::println);
 
         System.out.println("Informe o codigo da marca desejada:");
-        var marca = Principal.scanner.nextLine();
-        endereco = endereco + String.format("/%s/modelos", marca);
-        var jsonMarca = consumoAPI.obterDados(endereco);
+        var cdMarca = Principal.scanner.nextLine();
 
-        DadosModelos modelos = conversor.obterDados(jsonMarca, DadosModelos.class);
+        endereco = endereco + String.format("/%s/modelos", cdMarca);
+        json = consumoAPI.obterDados(endereco);
+        Modelos modelos = conversor.obterDados(json, Modelos.class);
+
+        System.out.println("Modelos dessa marca:");
         modelos.modelos().stream()
-                .sorted(Comparator.comparing(DadosVeiculo::codigo))
+                .sorted(Comparator.comparing(Dados::codigo))
                 .forEach(System.out::println);
 
-        List<DadosVeiculo> veiculos = modelos.modelos().stream()
-                        .collect(Collectors.toList());
-
         System.out.println("Informe o trecho do nome do veiculo para consulta: ");
-        var trechoVeiculo = scanner.nextLine();
+        var nmVeiculo = scanner.nextLine();
 
-        veiculos.stream()
-                .filter(e ->  e.nome().toLowerCase().contains(trechoVeiculo.toLowerCase()))
+        modelos.modelos().stream()
+                .collect(Collectors.toList()).stream()
+                .filter(m -> m.nome().toLowerCase().contains(nmVeiculo.toLowerCase()))
                 .forEach(System.out::println);
 
         System.out.println("Informe o codigo de um carro para consultar: ");
         var cdCarro = scanner.nextLine();
 
         endereco = endereco + String.format("/%s/anos", cdCarro);
-        var jsonDesCompletaVeiculo = consumoAPI.obterDados(endereco);
-        var modelosAnosPorCarro = conversor.obterDadosList(jsonDesCompletaVeiculo, DadosVeiculo.class, false);
+        json = consumoAPI.obterDados(endereco);
+        List<Dados> anos = conversor.obterDadosList(json, Dados.class);
+        List<Veiculo> veiculos = new ArrayList<>();
 
-        List<DadosCompletos> modeloPorAno = new ArrayList<>();
-        for (DadosVeiculo dados: modelosAnosPorCarro){
-            var dadoConsulta = consumoAPI.obterDados(endereco + "/" + dados.codigo());
-            modeloPorAno.add(conversor.obterDados(dadoConsulta, DadosCompletos.class));
+        for (Dados ano: anos){
+            json = consumoAPI.obterDados(endereco + "/" + ano.codigo());
+            veiculos.add(conversor.obterDados(json, Veiculo.class));
         }
         System.out.println("Todos os veiculos filtrados com avaliacoes por ano:");
-        modeloPorAno.forEach(System.out::println);
+        veiculos.forEach(System.out::println);
     }
 
     private String urlVeciulo(String entrada) {

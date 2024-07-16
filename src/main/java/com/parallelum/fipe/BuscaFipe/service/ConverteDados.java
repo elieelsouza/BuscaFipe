@@ -19,18 +19,12 @@ public class ConverteDados implements IConverteDados {
     }
 
     @Override
-    public <T> List<T> obterDadosList(String json, Class<T> classe, boolean bidimensional) {
+    public <T> List<T> obterDadosList(String json, Class<T> classe) {
         CollectionType lista = mapper.getTypeFactory()
                 .constructCollectionType(List.class, classe);
 
         try{
-            if (!bidimensional)
-                return mapper.readValue(json, lista);
-            else {
-                CollectionType listBi = mapper.getTypeFactory()
-                        .constructCollectionType(List.class, lista);
-                return mapper.readValue(json, listBi);
-            }
+            return mapper.readValue(json, lista);
         } catch(Exception e) {
             throw new RuntimeException(e);
         }
